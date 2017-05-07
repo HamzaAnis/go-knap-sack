@@ -2,34 +2,50 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"sort"
 )
 
-var knap [][]float64
+type knap []knapsack
 
-func knapSack(value []float64, weight []float64, cap int) float64 {
-	if len(value) != len(weight) {
-		fmt.Println("Invalid  size")
-		return 0
-	}
-	return knapSackRecusive(value, weight, cap, len(value)-1)
+func (c knap) Len() int      { return len(c) }
+func (c knap) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c knap) Less(i, j int) bool {
+	return c[i].getValueP() > c[j].getValueP()
 }
 
-func knapSackRecusive(value []float64, weight []float64, cap int, pos int) float64 {
-	if pos < 0 {
+func knapSack(cap int, objects []knapsack) float64 {
+	display(objects)
+	sort.Sort(knap(objects))
+	fmt.Print("After sorting\n")
+	display(objects)
+	return knapSackRecursive(cap, objects, 0)
+}
+
+func display(a []knapsack) {
+	for i := 0; i < len(a); i++ {
+		fmt.Print(a[i].value, a[i].weight, a[i].getValueP(), "\n")
+	}
+}
+
+func knapSackRecursive(cap int, objects []knapsack, pos int) float64 {
+	if pos == len(objects) {
 		return 0
 	}
-	if weight[pos] > float64(cap) {
-		return knapSackRecusive(value, weight, cap, pos-1)
-	} else {
-		A := math.Max(value[pos], knapSackRecusive(value, weight, cap-int(weight[pos]), pos-1))
-		B := math.Max(value[pos], knapSackRecusive(value, weight, cap, pos-1))
-		return math.Max(A, B)
+	if cap <= 0 {
+		return float64(cap) * objects[pos-1].getValueP()
 	}
+	return objects[pos].value + knapSackRecursive(cap-int(objects[pos].weight), objects, pos+1)
 }
 func main() {
-	var v = []float64{60, 100, 120}
-	var w = []float64{10, 20, 30}
+	objects := []knapsack{{60, 100}, {100, 20}, {120, 30}}
+	fmt.Println(knapSack(50, objects))
+}
 
-	fmt.Println(knapSack(v, w, 50))
+type knapsack struct {
+	value  float64
+	weight float64
+}
+
+func (a knapsack) getValueP() float64 {
+	return a.value / a.weight
 }
